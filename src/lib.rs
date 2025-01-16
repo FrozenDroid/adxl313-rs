@@ -12,10 +12,10 @@ use hal::digital::v2::OutputPin;
 
 pub use accelerometer::{Accelerometer, RawAccelerometer, error, Error, vector::{I32x3, F32x3}};
 
+use crate::Adxl313Error::WrongId;
+use crate::OutputDataRate::{ODR_1600_HZ, ODR_3200_HZ};
 pub use conf::*;
 use register::Register;
-use crate::OutputDataRate::{ODR_3200_HZ, ODR_1600_HZ};
-use crate::Adxl313Error::WrongId;
 
 const SPI_READ: u8 = 0x80;
 const SPI_WRITE: u8 = 0x00;
@@ -23,10 +23,9 @@ const SPI_WRITE: u8 = 0x00;
 const EXPECTED_DEVID_0: u8 = 0xad;
 const EXPECTED_DEVID_1: u8 = 0x1d;
 const EXPECTED_PART_ID: u8 = 0b1100_1011;
-const EXPECTED_DEVICE_ID: u32 =
-    ((EXPECTED_DEVID_0 as u32) << 16) |
-    ((EXPECTED_DEVID_1 as u32) << 8) |
-    (EXPECTED_PART_ID as u32);
+const EXPECTED_DEVICE_ID: u32 = ((EXPECTED_DEVID_0 as u32) << 16)
+    | ((EXPECTED_DEVID_1 as u32) << 8)
+    | (EXPECTED_PART_ID as u32);
 
 const ACCEL_MAX_16BIT: u32 = 32_767; // = 2^(16-1)-1
 const ACCEL_MAX_10BIT: u32 = 511; // = 2^(10-1)-1
@@ -136,31 +135,31 @@ impl<SPI, CS, SpiError, PinError> Adxl313<SPI, CS>
     }
 
     pub fn activity_inactivity_control(
-        &mut self, activity_coupling: AcDcCoupling, inactivity_coupling: AcDcCoupling,
-        enable_x_activity: bool, enable_x_inactivity: bool,
-        enable_y_activity: bool, enable_y_inactivity: bool,
-        enable_z_activity: bool, enable_z_inactivity: bool
+        &mut self,
+        activity_coupling: AcDcCoupling,
+        inactivity_coupling: AcDcCoupling,
+        enable_x_activity: bool,
+        enable_x_inactivity: bool,
+        enable_y_activity: bool,
+        enable_y_inactivity: bool,
+        enable_z_activity: bool,
+        enable_z_inactivity: bool,
     ) -> Result<(), Adxl313Error<SpiError, PinError>> {
-        let val =
-            (activity_coupling.val() << 7) +
-            (enable_x_activity as u8) << 6 +
-            (enable_y_activity as u8) << 5 +
-            (enable_z_activity as u8) << 4 +
-            (inactivity_coupling.val() << 3) +
-            (enable_x_inactivity as u8) << 2 +
-            (enable_y_inactivity as u8) << 1 +
-            (enable_z_inactivity as u8);
+        let val = (activity_coupling.val() << 7) + (enable_x_activity as u8)
+            << 6 + (enable_y_activity as u8)
+            << 5 + (enable_z_activity as u8)
+            << 4 + (inactivity_coupling.val() << 3) + (enable_x_inactivity as u8)
+            << 2 + (enable_y_inactivity as u8)
+            << 1 + (enable_z_inactivity as u8);
         self.write_reg(Register::ACT_INACT_CTL.addr(), val)
     }
 
     pub fn output_data_rate_and_low_power(
         &mut self,
         rate: OutputDataRate,
-        low_power_enabled: bool
+        low_power_enabled: bool,
     ) -> Result<(), Adxl313Error<SpiError, PinError>> {
-        let val =
-            ((low_power_enabled as u8) << 4) +
-            rate.val();
+        let val = ((low_power_enabled as u8) << 4) + rate.val();
         self.write_reg(Register::BW_RATE.addr(), val)?;
         self.output_data_rate = Some(rate);
         Ok(())
@@ -173,28 +172,34 @@ impl<SPI, CS, SpiError, PinError> Adxl313<SPI, CS>
         auto_sleep: bool,
         measuring: bool,
         sleep_enabled: bool,
-        sleep_mode_frequency_reading: SleepModeFrequencyReadings
+        sleep_mode_frequency_reading: SleepModeFrequencyReadings,
     ) -> Result<(), Adxl313Error<SpiError, PinError>> {
-        let val =
-            ((i2c_disabled as u8) << 6) +
-            ((concurrent_activity_inactivity as u8) << 5) +
-            ((auto_sleep as u8) << 4) +
-            ((measuring as u8) << 3) +
-            ((sleep_enabled as u8) << 2) +
-            sleep_mode_frequency_reading.val();
+        let val = ((i2c_disabled as u8) << 6)
+            + ((concurrent_activity_inactivity as u8) << 5)
+            + ((auto_sleep as u8) << 4)
+            + ((measuring as u8) << 3)
+            + ((sleep_enabled as u8) << 2)
+            + sleep_mode_frequency_reading.val();
         self.write_reg(Register::POWER_CTL.addr(), val)
     }
 
-    pub fn interrupt_enable(&mut self, conf: InterruptSource) -> Result<(), Adxl313Error<SpiError, PinError>> {
+    pub fn interrupt_enable(
+        &mut self,
+        conf: InterruptSource,
+    ) -> Result<(), Adxl313Error<SpiError, PinError>> {
         self.write_reg(Register::INT_ENABLE.addr(), conf.value)
     }
 
-    pub fn interrupt_pin_mapping(&mut self, conf: InterruptSource) -> Result<(), Adxl313Error<SpiError, PinError>> {
+    pub fn interrupt_pin_mapping(
+        &mut self,
+        conf: InterruptSource,
+    ) -> Result<(), Adxl313Error<SpiError, PinError>> {
         self.write_reg(Register::INT_MAP.addr(), conf.value)
     }
 
     pub fn interrupt_source(&mut self) -> Result<InterruptSource, Adxl313Error<SpiError, PinError>> {
-        self.read_reg(Register::INT_SOURCE.addr()).map(|value| InterruptSource { value} )
+        self.read_reg(Register::INT_SOURCE.addr())
+            .map(|value| InterruptSource { value })
     }
 
     pub fn data_format(
@@ -204,14 +209,14 @@ impl<SPI, CS, SpiError, PinError> Adxl313<SPI, CS>
         irq_mode: IrqMode,
         full_resolution: bool,
         left_justified_data: bool,
-        range: Range
+        range: Range,
     ) -> Result<(), Adxl313Error<SpiError, PinError>> {
-        let val: u8 =
-            ((self_test as u8) << 7) +
-            (spi_mode.val() << 6) +
-            (irq_mode.val() << 5) +
-            ((full_resolution as u8) << 3) +
-            ((left_justified_data as u8) << 2) + range.val();
+        let val: u8 = ((self_test as u8) << 7)
+            + (spi_mode.val() << 6)
+            + (irq_mode.val() << 5)
+            + ((full_resolution as u8) << 3)
+            + ((left_justified_data as u8) << 2)
+            + range.val();
         self.write_reg(Register::DATA_FORMAT.addr(), val)?;
         self.range = Some(range);
         self.left_justified_data = left_justified_data;
@@ -223,18 +228,16 @@ impl<SPI, CS, SpiError, PinError> Adxl313<SPI, CS>
         &mut self,
         fifo_mode: FifoMode,
         interrupt_to_pin2: bool,
-        samples: u8
+        samples: u8,
     ) -> Result<(), Adxl313Error<SpiError, PinError>> {
         let samples = samples & 0b1_1111;
-        let val =
-            ((fifo_mode as u8) << 6) +
-            ((interrupt_to_pin2 as u8) << 5) +
-            samples;
+        let val = ((fifo_mode as u8) << 6) + ((interrupt_to_pin2 as u8) << 5) + samples;
         self.write_reg(Register::FIFO_CTL.addr(), val)
     }
 
     pub fn fifo_status(&mut self) -> Result<FifoStatus, Adxl313Error<SpiError, PinError>> {
-        self.read_reg(Register::FIFO_STATUS.addr()).map(FifoStatus::new)
+        self.read_reg(Register::FIFO_STATUS.addr())
+            .map(FifoStatus::new)
     }
 
     pub fn start_measuring(&mut self) -> Result<(), Adxl313Error<SpiError, PinError>> {
@@ -249,7 +252,12 @@ impl<SPI, CS, SpiError, PinError> Adxl313<SPI, CS>
     }
 
     pub fn is_10_bit(&self) -> bool {
-        is_10_bit(self.output_data_rate.unwrap_or_default(), self.left_justified_data, self.full_resolution, self.range.unwrap_or_default())
+        is_10_bit(
+            self.output_data_rate.unwrap_or_default(),
+            self.left_justified_data,
+            self.full_resolution,
+            self.range.unwrap_or_default(),
+        )
     }
 
     /// Get the device ID
@@ -269,11 +277,7 @@ impl<SPI, CS, SpiError, PinError> Adxl313<SPI, CS>
         let dev1 = self.read_reg(Register::DEVID_1.addr())?;
         let part_id = self.read_reg(Register::PARTID.addr())?;
 
-        Ok(
-            ((dev0 as u32) << 16)
-                | ((dev1 as u32) << 8)
-                | (part_id as u32)
-        )
+        Ok(((dev0 as u32) << 16) | ((dev1 as u32) << 8) | (part_id as u32))
     }
 
     fn write_reg(&mut self, reg: u8, value: u8) -> Result<(), Adxl313Error<SpiError, PinError>> {
@@ -299,15 +303,26 @@ impl<SPI, CS, SpiError, PinError> Adxl313<SPI, CS>
 }
 
 #[inline]
-fn is_10_bit(odr: OutputDataRate, left_justified_data: bool, full_resolution: bool, range: Range ) -> bool {
-        let odr = odr.val();
-        (odr == ODR_3200_HZ.val() || odr == ODR_1600_HZ.val())
-            && left_justified_data
-            && (full_resolution || range.val() == Range::_0d5G.val())
+fn is_10_bit(
+    odr: OutputDataRate,
+    left_justified_data: bool,
+    full_resolution: bool,
+    range: Range,
+) -> bool {
+    let odr = odr.val();
+    (odr == ODR_3200_HZ.val() || odr == ODR_1600_HZ.val())
+        && left_justified_data
+        && (full_resolution || range.val() == Range::_0d5G.val())
 }
 
 #[inline]
-fn i32_from_2_u8_in_buf(buffer: &[u8; 6+1], offset: usize, right_shift: u16, mask: u16, sign_mask: u16) -> i32 {
+fn i32_from_2_u8_in_buf(
+    buffer: &[u8],
+    offset: usize,
+    right_shift: u16,
+    mask: u16,
+    sign_mask: u16,
+) -> i32 {
     let r = ((buffer[offset + 1] as u16) << 8) | (buffer[offset] as u16);
     let mut r = (r >> right_shift) & mask;
     if r & sign_mask > 0 {
@@ -366,7 +381,11 @@ impl<SPI, CS, E, PinError> Accelerometer for Adxl313<SPI, CS>
         let raw_data: I32x3 = self.accel_raw()?;
         let range: f32 = self.range.unwrap_or_default().into(); // range in [g], so 0.5, 1, 2, 4 or 8
 
-        let max = if self.is_10_bit() { ACCEL_MAX_10BIT } else { ACCEL_MAX_16BIT };
+        let max = if self.is_10_bit() {
+            ACCEL_MAX_10BIT
+        } else {
+            ACCEL_MAX_16BIT
+        };
 
         let x = (raw_data.x as f32 / max as f32) * range;
         let y = (raw_data.y as f32 / max as f32) * range;
@@ -383,22 +402,29 @@ impl<SPI, CS, E, PinError> Accelerometer for Adxl313<SPI, CS>
 #[cfg(test)]
 mod tests {
     use crate::{x_y_z_raw_values, Range, is_10_bit};
-    use crate::OutputDataRate::{ODR_100_HZ, ODR_50_HZ, ODR_1600_HZ};
+    use crate::OutputDataRate::{ODR_100_HZ, ODR_1600_HZ, ODR_50_HZ};
+    use crate::{is_10_bit, x_y_z_raw_values, Range};
 
     #[test]
     fn test_x_y_z_raw() {
         // Given
-        let buf: [u8; 6+1] = [
+        let buf: [u8; 6 + 1] = [
             0, // Command byte
-            0b1111_1111, 0b1111_1111, // X
-            0b1111_1111, 0b1111_1111, // Y
-            0b1111_1111, 0b1111_1111, // Z
+            0b1111_1111,
+            0b1111_1111, // X
+            0b1111_1111,
+            0b1111_1111, // Y
+            0b1111_1111,
+            0b1111_1111, // Z
         ];
-        let buf2: [u8; 6+1] = [
+        let buf2: [u8; 6 + 1] = [
             0,
-            0b1010_0101, 0b1010_0101, // X
-            0b0101_1010, 0b0101_1010, // Y
-            0b1000_0001, 0b1010_1100, // Z
+            0b1010_0101,
+            0b1010_0101, // X
+            0b0101_1010,
+            0b0101_1010, // Y
+            0b1000_0001,
+            0b1010_1100, // Z
         ];
         let is_10_bit_val = is_10_bit(ODR_100_HZ, false, false, Range::_0d5G);
         let (x, y, z) = x_y_z_raw_values(buf, Range::_0d5G, is_10_bit_val);
@@ -426,15 +452,15 @@ mod tests {
 
         let is_10_bit_val = is_10_bit(ODR_1600_HZ, true, true, Range::_0d5G);
         let (x, y, z) = x_y_z_raw_values(buf2, Range::_0d5G, is_10_bit_val);
-        assert_eq!(x, -32618);  // 1010_0101 1010_0101 => 10_1001_0110 => 1000_0000_1001_0110
-        assert_eq!(y, 361);     // 0101_1010 0101_1010 => 01_0110_1001 => 0000_0001_0110_1001
-        assert_eq!(z, -32590);  // 1010_1100 1000_0001 => 10_1011_0010 => 1000_0000_1011_0010
+        assert_eq!(x, -32618); // 1010_0101 1010_0101 => 10_1001_0110 => 1000_0000_1001_0110
+        assert_eq!(y, 361); // 0101_1010 0101_1010 => 01_0110_1001 => 0000_0001_0110_1001
+        assert_eq!(z, -32590); // 1010_1100 1000_0001 => 10_1011_0010 => 1000_0000_1011_0010
 
         let is_10_bit_val = is_10_bit(ODR_1600_HZ, true, true, Range::_2d0G);
         let (x, y, z) = x_y_z_raw_values(buf2, Range::_2d0G, is_10_bit_val);
-        assert_eq!(x, -32678);  // 1010_0101 1010_0101 => 10_0101 1010 => 1000_0000_0101_1010
-        assert_eq!(y, 421);     // 0101_1010 0101_1010 => 01_1010_0101 => 0000_0001_1010_0101
-        assert_eq!(z, -32568);  // 1010_1100 1000_0001 => 10_1100_1000 => 1000_0000_1100_1000
+        assert_eq!(x, -32678); // 1010_0101 1010_0101 => 10_0101 1010 => 1000_0000_0101_1010
+        assert_eq!(y, 421); // 0101_1010 0101_1010 => 01_1010_0101 => 0000_0001_1010_0101
+        assert_eq!(z, -32568); // 1010_1100 1000_0001 => 10_1100_1000 => 1000_0000_1100_1000
     }
 
     #[test]

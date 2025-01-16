@@ -90,7 +90,7 @@ pub enum SleepModeFrequencyReadings {
     _8_HZ = 0b00,
     _4_HZ = 0b01,
     _2_HZ = 0b10,
-    _1_HZ = 0b11
+    _1_HZ = 0b11,
 }
 
 impl SleepModeFrequencyReadings {
@@ -100,7 +100,7 @@ impl SleepModeFrequencyReadings {
 }
 
 pub struct InterruptSource {
-    pub value: u8
+    pub value: u8,
 }
 
 impl InterruptSource {
@@ -109,14 +109,13 @@ impl InterruptSource {
         activity: bool,
         inactivity: bool,
         watermark: bool,
-        overrun: bool
+        overrun: bool,
     ) -> InterruptSource {
-        let value =
-            ((data_ready as u8) << 7) +
-            ((activity as u8) << 4) +
-            ((inactivity as u8) << 3) +
-            ((watermark as u8) << 1) +
-            (overrun as u8);
+        let value = ((data_ready as u8) << 7)
+            + ((activity as u8) << 4)
+            + ((inactivity as u8) << 3)
+            + ((watermark as u8) << 1)
+            + (overrun as u8);
         InterruptSource { value }
     }
 
@@ -146,7 +145,7 @@ pub enum FifoMode {
     Bypass = 0b00,
     Fifo = 0b01,
     Stream = 0b10,
-    Trigger = 0b11
+    Trigger = 0b11,
 }
 
 impl FifoMode {
@@ -157,14 +156,14 @@ impl FifoMode {
 
 pub struct FifoStatus {
     pub triggered: bool,
-    pub samples: u8
+    pub samples: u8,
 }
 
 impl FifoStatus {
     pub fn new(val: u8) -> FifoStatus {
         FifoStatus {
             triggered: val & 0b1000_0000 != 0,
-            samples: (val & 0b0001_1111)
+            samples: (val & 0b0001_1111),
         }
     }
 }
@@ -172,7 +171,7 @@ impl FifoStatus {
 #[derive(Copy, Clone, Debug)]
 pub enum SpiMode {
     _4_WIRE = 0,
-    _3_WIRE = 1
+    _3_WIRE = 1,
 }
 
 impl SpiMode {
@@ -190,7 +189,7 @@ impl Default for SpiMode {
 #[derive(Copy, Clone, Debug)]
 pub enum IrqMode {
     ACTIVE_HIGH = 0,
-    ACTIVE_LOW = 1
+    ACTIVE_LOW = 1,
 }
 
 impl IrqMode {
@@ -205,11 +204,10 @@ impl Default for IrqMode {
     }
 }
 
-
 #[derive(Copy, Clone, Debug)]
 pub enum AcDcCoupling {
     DcCoupling = 0,
-    AcCoupling = 1
+    AcCoupling = 1,
 }
 
 impl AcDcCoupling {
