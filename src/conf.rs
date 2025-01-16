@@ -154,6 +154,7 @@ impl FifoMode {
     }
 }
 
+#[derive(Debug)]
 pub struct FifoStatus {
     pub triggered: bool,
     pub samples: u8,

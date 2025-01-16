@@ -11,5 +11,6 @@ version = "0.2.3"
 readme = "README.md"
 
 [dependencies]
-embedded-hal = "~0.2"
-accelerometer = "~0.11"
+embedded-hal = "1.0"
+accelerometer = "0.12"
+defmt = "0.3"

@@ -39,3 +39,14 @@ impl Register {
         self as u8
     }
 }
+
+pub mod bitmask {
+    pub mod power_ctl {
+        pub const WAKEUP: u8 = 0b0000_0011;
+        pub const SLEEP: u8 = 0b0000_0100;
+        pub const MEASURE: u8 = 0b0000_1000;
+        pub const AUTO_SLEEP: u8 = 0b0001_0000;
+        pub const LINK: u8 = 0b0010_0000;
+        pub const I2C_DISABLE: u8 = 0b0100_0000;
+    }
+}
