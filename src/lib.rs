@@ -334,7 +334,6 @@ where
     pub fn start_measuring(&mut self) -> Result<(), Adxl313Error<InterfaceError>> {
         let val = self.read_reg(Register::POWER_CTL.addr())?;
         if val & bitmask::power_ctl::SLEEP != 0 {
-            defmt::info!("Device is in sleep mode");
             // Device is sleeping. First put into standby mode
             self.write_reg(
                 Register::POWER_CTL.addr(),
@@ -349,7 +348,6 @@ where
         )?;
 
         let val = self.read_reg(Register::POWER_CTL.addr())?;
-        defmt::info!("val after aaaa: {:08b}", val);
 
         Ok(())
     }
